@@ -1,0 +1,58 @@
+{
+  "pickle_x_mysore": {
+    "facility_id": "pickle_x_mysore",
+    "facility_name": "Pickle X Mysore",
+    "phone_number": "+919876543210",
+    "number_of_courts": 4,
+    "open_time": "06:00",
+    "close_time": "23:00",
+    "booking_rules": {
+      "minimum_duration": 60,
+      "duration_multiples": 60,
+      "fixed_slots": true
+    },
+    "pricing": {
+      "weekday_per_hour": 280,
+      "weekend_per_hour": 300
+    },
+    "rentals": {
+      "racket": 100,
+      "shoes": 100,
+      "shuttle_sale": 380
+    },
+    "coaching": {
+      "available": true,
+      "fee": 2500,
+      "timings": ["7-9 AM", "4-6 PM"],
+      "age_below": 18
+    }
+  },
+  "pickle_x_bangalore": {
+    "facility_id": "pickle_x_bangalore",
+    "facility_name": "Pickle X Bangalore",
+    "phone_number": "+919876543211",
+    "number_of_courts": 6,
+    "open_time": "06:00",
+    "close_time": "23:00",
+    "booking_rules": {
+      "minimum_duration": 60,
+      "duration_multiples": 60,
+      "fixed_slots": true
+    },
+    "pricing": {
+      "weekday_per_hour": 300,
+      "weekend_per_hour": 350
+    },
+    "rentals": {
+      "racket": 120,
+      "shoes": 120,
+      "shuttle_sale": 400
+    },
+    "coaching": {
+      "available": true,
+      "fee": 3000,
+      "timings": ["6-8 AM", "5-7 PM"],
+      "age_below": 18
+    }
+  }
+}

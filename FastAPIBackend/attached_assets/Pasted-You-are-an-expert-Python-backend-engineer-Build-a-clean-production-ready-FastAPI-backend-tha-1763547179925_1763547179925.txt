@@ -1,0 +1,247 @@
+You are an expert Python backend engineer.  
+Build a clean, production-ready **FastAPI backend** that powers an AI voice assistant for sports facility bookings.
+
+The backend will serve **inbound calls only**.  
+The agent uses OpenAI Realtime API for voice.
+
+The backend must follow *exactly* these requirements:
+
+────────────────────────────────────────
+FACILITY MODEL (Configured in system prompt, not DB)
+────────────────────────────────────────
+Do **not** store any facility data in a database.
+
+Facilities are not stored in DB.  
+Each facility is configured inside a JSON file (`facilities.json`) containing:
+
+- facility_id  
+- facility_name  
+- phone_number (unique number for this facility)  
+- number_of_courts  
+- operating_hours (open_time, close_time)  
+- coaching_details  
+- rental_items  
+- pricing  
+- booking_rules
+
+Backend should load this JSON at startup.  
+Each facility = separate phone line, handled by Twilio/Exotel webhook.
+
+Example structure:
+{
+  "pickle_x_mysore": {
+    "facility_name": "Pickle X",
+    "phone_number": "+91XXXXXXXXXX",
+    "number_of_courts": 4,
+    "open_time": "06:00",
+    "close_time": "23:00",
+    "booking_rules": {
+      "minimum_duration": 60,
+      "duration_multiples": 60,
+      "fixed_slots": true
+    },
+    "pricing": {
+      "weekday_per_hour": 280,
+      "weekend_per_hour": 300
+    },
+    "rentals": {
+      "racket": 100,
+      "shoes": 100,
+      "shuttle_sale": 380
+    },
+    "coaching": {
+      "available": true,
+      "fee": 2500,
+      "timings": ["7-9 AM", "4-6 PM"],
+      "age_below": 18
+    }
+  }
+}
+
+────────────────────────────────────────
+DATA STORAGE RULE
+────────────────────────────────────────
+No database is used.
+
+**Google Calendar is the only source of truth**.
+
+The backend must:
+
+• Check availability by querying Google Calendar  
+• Create bookings by writing events to Google Calendar  
+
+────────────────────────────────────────
+CALLER IDENTIFICATION LOGIC
+────────────────────────────────────────
+Rules:
+
+1. If caller ID is present → ask:  
+   “Is this the same number you want to use for booking?”  
+   If yes → use it  
+   If no → ask user to speak alternate number  
+
+2. If caller ID is missing → ask user for number explicitly  
+
+The backend must expose functions for the LLM to trigger.
+
+────────────────────────────────────────
+REQUIRED API ENDPOINTS
+────────────────────────────────────────
+1. **/realtime**  
+WebSocket endpoint for OpenAI Realtime API.  
+Handles:
+- inbound audio  
+- outbound audio  
+- sending function-calls  
+- receiving function-call results  
+- session management  
+
+2. **/voice/webhook**  
+Exotel/Twilio webhook.  
+Handles:
+- call start  
+- identifies facility using called phone number  
+- initializes a realtime session  
+- connects caller to the AI voice  
+
+3. **Internal function-call endpoints**  
+(Accessible only from inside the Realtime session)
+
+A. check_availability  
+Inputs:
+- facility_id  
+- date  
+- start_time  
+- duration_minutes  
+- number_of_courts
+
+Output:
+- available: true/false  
+- free_courts: list of free court numbers  
+- reason_if_not_available
+
+B. create_booking  
+Inputs:
+- facility_id  
+- date  
+- start_time  
+- duration_minutes  
+- name  
+- phone_number  
+- court_numbers (list)
+
+The backend must write an event to Google Calendar.
+
+Event title format:
+“Court {court_number} Booking - {Customer Name}”
+
+Event description must include:
+- Customer Name  
+- Phone  
+- Facility  
+- Court Number  
+- Date  
+- Start Time  
+- End Time  
+- Duration  
+
+────────────────────────────────────────
+GOOGLE CALENDAR INTEGRATION
+────────────────────────────────────────
+Use Google API Python Client.
+
+The backend must support:
+
+• OAuth / Service Account  
+• Create event  
+• Search for events  
+• Check conflicts  
+
+Availability check logic:
+
+- Loop through EACH court (Court 1..Court N)  
+- For each court, check if requested slot overlaps an event  
+- Return all free courts  
+- If free courts < requested courts → return unavailable  
+
+Slot validation rules:
+• Must be in multiples of 60 mins only  
+• Must align with hourly boundaries (5:00, 6:00, 7:00…)  
+No 5:30–6:30 or similar  
+
+────────────────────────────────────────
+REALTIME FUNCTION CALLING SETUP
+────────────────────────────────────────
+The WS endpoint must:
+
+• Create an OpenAI Realtime session  
+• Register handlers for:
+    - check_availability  
+    - create_booking  
+
+• Return results to the model in:
+{
+  "result": "...",
+  "data": {...}
+}
+
+────────────────────────────────────────
+ERROR HANDLING
+────────────────────────────────────────
+If any function fails:
+
+Return:
+{
+ "success": false,
+ "error": "Detailed message"
+}
+
+────────────────────────────────────────
+CODE STRUCTURE
+────────────────────────────────────────
+
+main.py
+routers/
+   - voice.py (Twilio/Exotel webhook)
+   - realtime.py (WebSocket)
+services/
+   - calendar_service.py
+   - booking_service.py
+   - facility_service.py
+utils/
+   - time_utils.py
+   - slot_utils.py
+config/
+   - facilities.json
+   - google_credentials.json
+schemas/
+   - function_call_schemas.py
+
+────────────────────────────────────────
+STARTUP CHECKLIST
+────────────────────────────────────────
+At startup:
+
+✓ Load facilities.json  
+✓ Initialize Google calendar client  
+✓ Preload facility metadata  
+✓ Print all loaded facilities for debugging  
+
+────────────────────────────────────────
+WHAT TO GENERATE
+────────────────────────────────────────
+Generate the ENTIRE FastAPI project with:
+
+✔️ main.py  
+✔️ All routers  
+✔️ All services  
+✔️ All utility functions  
+✔️ facilities.json template  
+✔️ Complete WebSocket Realtime implementation  
+✔️ Twilio/Exotel webhook handler  
+✔️ Fully working Google Calendar integration  
+✔️ Detailed README explaining setup  
+
+Write clean code, well commented, production-ready.
+
+THIS IS A COMPLETE PROJECT — GENERATE EVERYTHING.
